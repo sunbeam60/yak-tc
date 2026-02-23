@@ -1,0 +1,22 @@
+[package]
+name = "yak-tc"
+version = "0.1.0"
+edition = "2024"
+description = "Total Commander WCX packer plugin for Yak container files"
+
+[lib]
+name = "yak_tc"
+crate-type = ["cdylib"]
+
+[dependencies]
+wcxhead = "0.1.2"
+yak = "0.11"
+
+[target.'cfg(windows)'.dependencies.windows]
+version = "0.61"
+features = [
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_UI_Controls",
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+]

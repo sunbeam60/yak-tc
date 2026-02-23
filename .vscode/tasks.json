@@ -1,0 +1,19 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build WCX Plugin",
+            "type": "shell",
+            "command": "cargo build --release && cp target/release/yak_tc.dll target/release/yak_tc.wcx64",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$rustc"],
+            "presentation": {
+                "reveal": "silent",
+                "showReuseMessage": false
+            }
+        }
+    ]
+}
