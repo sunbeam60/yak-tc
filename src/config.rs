@@ -296,7 +296,7 @@ unsafe extern "system" fn dialog_proc(
 ) -> isize {
     match msg {
         WM_INITDIALOG => {
-            unsafe { SetWindowLongPtrW(dlg, GWLP_USERDATA, lparam.0) };
+            unsafe { SetWindowLongPtrW(dlg, GWLP_USERDATA, lparam.0 as _) };
             let data = unsafe { &*(lparam.0 as *const DialogData) };
             let cfg = &data.config;
 
@@ -438,7 +438,7 @@ unsafe extern "system" fn password_proc(
 ) -> isize {
     match msg {
         WM_INITDIALOG => {
-            unsafe { SetWindowLongPtrW(dlg, GWLP_USERDATA, lparam.0) };
+            unsafe { SetWindowLongPtrW(dlg, GWLP_USERDATA, lparam.0 as _) };
 
             // Center on parent
             let parent = unsafe { GetParent(dlg) }.unwrap_or_default();
