@@ -379,7 +379,6 @@ pub fn show_dialog(parent: HWND, ini_path: &str) -> Option<PackerConfig> {
         )
     };
 
-    crate::log(&format!("show_dialog: DialogBoxIndirectParamW returned {}", result));
     if result == 1 { Some(data.config) } else { None }
 }
 
