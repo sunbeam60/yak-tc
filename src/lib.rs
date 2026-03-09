@@ -491,7 +491,6 @@ pub unsafe extern "system" fn PackFiles(
             }
         } else {
             let opts = CreateOptions {
-                block_index_width: cfg.block_index_width,
                 block_size_shift: cfg.block_size_shift,
                 compressed_block_size_shift: cfg.compressed_block_size_shift,
                 password: password.as_deref(),

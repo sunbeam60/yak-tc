@@ -10,7 +10,6 @@ use windows::Win32::UI::WindowsAndMessaging::*;
 
 #[derive(Clone, Copy, Debug)]
 pub struct PackerConfig {
-    pub block_index_width: u8,
     pub block_size_shift: u8,
     pub compressed_block_size_shift: u8,
     pub compress: bool,
@@ -19,7 +18,6 @@ pub struct PackerConfig {
 
 impl PackerConfig {
     pub const DEFAULT: Self = Self {
-        block_index_width: 4,
         block_size_shift: 12,
         compressed_block_size_shift: 15,
         compress: true,
@@ -71,7 +69,6 @@ impl PackerConfig {
         let def = Self::DEFAULT;
 
         Self {
-            block_index_width: get_ini_int(&section, "block_index_width", def.block_index_width as i32, &file) as u8,
             block_size_shift: get_ini_int(&section, "block_size_shift", def.block_size_shift as i32, &file) as u8,
             compressed_block_size_shift: get_ini_int(&section, "compressed_block_size_shift", def.compressed_block_size_shift as i32, &file) as u8,
             compress: get_ini_int(&section, "compress", def.compress as i32, &file) != 0,
@@ -91,7 +88,6 @@ impl PackerConfig {
             };
         };
 
-        put("block_index_width", &self.block_index_width.to_string());
         put("block_size_shift", &self.block_size_shift.to_string());
         put("compressed_block_size_shift", &self.compressed_block_size_shift.to_string());
         put("compress", if self.compress { "1" } else { "0" });
@@ -104,16 +100,12 @@ impl PackerConfig {
 // ────────────────────────────────────────────────────────────
 
 // Control IDs
-const IDC_BLOCK_INDEX: i32 = 101;
 const IDC_BLOCK_SIZE: i32 = 102;
 const IDC_COMP_BLOCK: i32 = 103;
 const IDC_COMPRESS: i32 = 104;
 const IDC_ENCRYPT: i32 = 105;
 const ID_OK: u16 = 1;
 const ID_CANCEL: u16 = 2;
-
-// Block index width options
-const INDEX_OPTIONS: &[(u8, &str)] = &[(2, "2 bytes"), (4, "4 bytes"), (8, "8 bytes")];
 
 // Block size options (shift -> human-readable)
 const BLOCK_SIZE_OPTIONS: &[(u8, &str)] = &[
@@ -158,7 +150,7 @@ fn build_dialog_template() -> Vec<u16> {
     buf.push(style as u16);
     buf.push((style >> 16) as u16);
     buf.push(0); buf.push(0); // dwExtendedStyle
-    buf.push(10); // cdit = number of controls
+    buf.push(8); // cdit = number of controls
     buf.push(0); buf.push(0); // x, y
     buf.push(220); buf.push(145); // cx, cy
 
@@ -175,26 +167,21 @@ fn build_dialog_template() -> Vec<u16> {
     let cx: i16 = 110;
     let cw: i16 = 100;
 
-    // Row 0: Block index width
-    push_label(&mut buf, lx, y0, 95, 10, "Block index width:");
-    push_combobox(&mut buf, cx, y0 - 2, cw, 80, IDC_BLOCK_INDEX as u16);
+    // Row 0: Block size
+    push_label(&mut buf, lx, y0, 95, 10, "Block size:");
+    push_combobox(&mut buf, cx, y0 - 2, cw, 80, IDC_BLOCK_SIZE as u16);
 
-    // Row 1: Block size
+    // Row 1: Compressed block size
     let y = y0 + rh;
-    push_label(&mut buf, lx, y, 95, 10, "Block size:");
-    push_combobox(&mut buf, cx, y - 2, cw, 80, IDC_BLOCK_SIZE as u16);
-
-    // Row 2: Compressed block size
-    let y = y0 + rh * 2;
     push_label(&mut buf, lx, y, 95, 10, "Compressed block size:");
     push_combobox(&mut buf, cx, y - 2, cw, 80, IDC_COMP_BLOCK as u16);
 
-    // Row 3: Compress checkbox
-    let y = y0 + rh * 3 + 6;
+    // Row 2: Compress checkbox
+    let y = y0 + rh * 2 + 6;
     push_checkbox(&mut buf, lx, y, 200, 12, IDC_COMPRESS as u16, "Compress streams");
 
-    // Row 4: Encrypt checkbox
-    let y = y0 + rh * 4 + 6;
+    // Row 3: Encrypt checkbox
+    let y = y0 + rh * 3 + 6;
     push_checkbox(&mut buf, lx, y, 200, 12, IDC_ENCRYPT as u16, "Encrypt");
 
     // Buttons
@@ -300,7 +287,6 @@ unsafe extern "system" fn dialog_proc(
             let data = unsafe { &*(lparam.0 as *const DialogData) };
             let cfg = &data.config;
 
-            populate_combo(dlg, IDC_BLOCK_INDEX, INDEX_OPTIONS, cfg.block_index_width);
             populate_combo(dlg, IDC_BLOCK_SIZE, BLOCK_SIZE_OPTIONS, cfg.block_size_shift);
             populate_combo(dlg, IDC_COMP_BLOCK, COMP_BLOCK_OPTIONS, cfg.compressed_block_size_shift);
 
@@ -335,7 +321,6 @@ unsafe extern "system" fn dialog_proc(
                 let ptr = unsafe { GetWindowLongPtrW(dlg, GWLP_USERDATA) };
                 if ptr != 0 {
                     let data = unsafe { &mut *(ptr as *mut DialogData) };
-                    data.config.block_index_width = combo_value(dlg, IDC_BLOCK_INDEX, INDEX_OPTIONS);
                     data.config.block_size_shift = combo_value(dlg, IDC_BLOCK_SIZE, BLOCK_SIZE_OPTIONS);
                     data.config.compressed_block_size_shift = combo_value(dlg, IDC_COMP_BLOCK, COMP_BLOCK_OPTIONS);
                     data.config.compress = unsafe { IsDlgButtonChecked(dlg, IDC_COMPRESS) } == BST_CHECKED.0;
